@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Semakan Singkatan Perkataan</title>
+    <style>
+        :root {
+            --primary-blue: #0A2540;
+            --secondary-blue: #0066cc;
+            --accent-red: #D9383A;
+            --light-bg: #F4F6F9;
+            --white: #FFFFFF;
+            --text-dark: #333333;
+            --text-muted: #666666;
+            --border-color: #E2E8F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            width: 100%;
+            max-width: 650px;
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            border-top: 6px solid var(--accent-red);
+        }
+
+        .header {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 25px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            color: #A0AEC0;
+        }
+
+        .search-section {
+            padding: 30px 25px;
+            background-color: var(--white);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-group {
+            position: relative;
+        }
+
+        .search-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--primary-blue);
+            font-size: 0.95rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 1.1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .search-input:focus {
+            border-color: var(--secondary-blue);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.15);
+        }
+
+        .results-section {
+            padding: 25px;
+            background-color: var(--white);
+        }
+
+        .result-box {
+            background-color: var(--light-bg);
+            border-left: 4px solid var(--secondary-blue);
+            border-radius: 6px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .result-box.active-search {
+            background-color: #EDF2F7;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 20px 0;
+        }
+
+        .footer {
+            background-color: #EDF2F7;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer strong {
+            color: var(--accent-red);
+        }
+    </style>
+</head>
+<body>
+
+<div class="dashboard-container">
+    <div class="header">
+        <h1>Sistem Semakan Singkatan</h1>
+        <p>Sila masukkan kod singkatan untuk carian pantas.</p>
+        <p>Nota: Pastikan huruf besar/kecil adalah tepat mengikut kod singkatan.</p>
+    </div>
+
+    <div class="search-section">
+        <div class="search-group">
+            <label for="singkatanInput">Masukkan Singkatan Perkataan:</label>
+            <input type="text" id="singkatanInput" class="search-input" placeholder="Contoh: AVR, BT1.1, SK015K..." autocomplete="off">
+        </div>
+    </div>
+
+    <div class="results-section">
+        <div id="resultsContent" style="display: none;">
+            <div class="result-box">
+                <div class="result-label">Nama Tempat / Subjek</div>
+                <div id="namaTempat" class="result-value">-</div>
+            </div>
+            <div class="result-box" style="border-left-color: var(--accent-red);">
+                <div class="result-label">Bangunan / Subjek</div>
+                <div id="bangunanSubjek" class="result-value">-</div>
+            </div>
+        </div>
+        <div id="emptyContent" class="empty-state">
+            Sila masukkan singkatan di atas untuk memulakan semakan.
+        </div>
+    </div>
+
+    <div class="footer">
+        Rekabentuk Profesional &bull; Tema <strong>Biru, Merah & Putih</strong>
+    </div>
+</div>
+
+<script>
+    // Pangkalan data singkatan perkataan (Sila rujuk data asal)
+    const database = {
+        "ASTK1": { tempat: "ASTAKA 1", bangunan: "PADANG" },
+        "ASTK2": { tempat: "ASTAKA 2", bangunan: "PADANG" },
+        "ASTK3": { tempat: "ASTAKA 3", bangunan: "PADANG" },
+        "ASTK4": { tempat: "ASTAKA 4", bangunan: "PADANG" },
+        "AVR": { tempat: "AUDIO VIDEO ROOM", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "BS": { tempat: "BILIK SIBER", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "BBBA": { tempat: "BILIK BACAAN BLOK A", bangunan: "ASRAMA BLOK A" },
+        "BRBA": { tempat: "BILIK REKREASI BLOK A", bangunan: "ASRAMA BLOK A" },
+        "BTVBA": { tempat: "BILIK TV BLOK A", bangunan: "ASRAMA BLOK A" },
+        "BBBB": { tempat: "BILIK BACAAN BLOK B", bangunan: "ASRAMA BLOK B" },
+        "BRBB": { tempat: "BILIK REKREASI BLOK B", bangunan: "ASRAMA BLOK B" },
+        "BTVBB": { tempat: "BILIK TV BLOK B", bangunan: "ASRAMA BLOK B" },
+        "BBBC": { tempat: "BILIK BACAAN BLOK C", bangunan: "ASRAMA BLOK C" },
+        "BRBC": { tempat: "BILIK REKREASI BLOK C", bangunan: "ASRAMA BLOK C" },
+        "BTVBC": { tempat: "BILIK TV BLOK C", bangunan: "ASRAMA BLOK C" },
+        "BBBD": { tempat: "BILIK BACAAN BLOK D", bangunan: "ASRAMA BLOK D" },
+        "BRBD": { tempat: "BILIK REKREASI BLOK D", bangunan: "ASRAMA BLOK D" },
+        "BTVBD": { tempat: "BILIK TV BLOK D", bangunan: "ASRAMA BLOK D" },
+        "BBBE": { tempat: "BILIK BACAAN BLOK E", bangunan: "ASRAMA BLOK E" },
+        "BRBE": { tempat: "BILIK REKREASI BLOK E", bangunan: "ASRAMA BLOK E" },
+        "BTVBE": { tempat: "BILIK TV BLOK E", bangunan: "ASRAMA BLOK E" },
+        "BBBF": { tempat: "BILIK BACAAN BLOK F", bangunan: "ASRAMA BLOK F" },
+        "BRBF": { tempat: "BILIK REKREASI BLOK F", bangunan: "ASRAMA BLOK F" },
+        "BTVBF": { tempat: "BILIK TV BLOK F", bangunan: "ASRAMA BLOK F" },
+        "BL. ILMU": { tempat: "BALAI ILMU", bangunan: "MASJID" },
+        "DKB1": { tempat: "DEWAN KULIAH BESAR 1", bangunan: "BANGUNAN KULIAH" },
+        "DKB2": { tempat: "DEWAN KULIAH BESAR 2", bangunan: "BANGUNAN KULIAH" },
+        "DKK1": { tempat: "DEWAN KULIAH KECIL 1", bangunan: "BANGUNAN KULIAH" },
+        "DKK2": { tempat: "DEWAN KULIAH KECIL 2", bangunan: "BANGUNAN KULIAH" },
+        "DKK3": { tempat: "DEWAN KULIAH KECIL 3", bangunan: "BANGUNAN KULIAH" },
+        "DKK4": { tempat: "DEWAN KULIAH KECIL 4", bangunan: "BANGUNAN KULIAH" },
+        "DSL1": { tempat: "DEWAN SRI LEDANG 1", bangunan: "DEWAN SERI LEDANG" },
+        "DSL2": { tempat: "DEWAN SRI LEDANG 2", bangunan: "DEWAN SERI LEDANG" },
+        "DSL3": { tempat: "DEWAN SRI LEDANG 3", bangunan: "DEWAN SERI LEDANG" },
+        "DSL4": { tempat: "DEWAN SRI LEDANG 4", bangunan: "DEWAN SERI LEDANG" },
+        "DST1": { tempat: "DEWAN SERI TANJUNG 1", bangunan: "DEWAN SERI TANJUNG" },
+        "DST2": { tempat: "DEWAN SERI TANJUNG 2", bangunan: "DEWAN SERI TANJUNG" },
+        "G.SKUASY1": { tempat: "GELANGGANG SKUASY 1", bangunan: "GELANGGANG SKUASY" },
+        "G.SKUASY2": { tempat: "GELANGGANG SKUASY 2", bangunan: "GELANGGANG SKUASY" },
+        "K.LOG": { tempat: "DEKINDLE LOGDE", bangunan: "BANGUNAN PENTADBIRAN" },
+        "OSC": { tempat: "ONE STOP CENTER", bangunan: "BANGUNAN PENTADBIRAN" },
+        "PENTAS DW": { tempat: "PENTAS DATARAN WAWASAN", bangunan: "DATARAN WAWASAN" },
+        "R n D": { tempat: "RESEACH AND DEVELOMENT", bangunan: "BANGUNAN PENTADBIRAN" },
+        "R.MASJID1": { tempat: "RUANG MASJID 1", bangunan: "MASJID" },
+        "R.MASJID2": { tempat: "RUANG MASJID 2", bangunan: "MASJID" },
+        "RBC1": { tempat: "RUANG BACAAN 1", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "RBC2": { tempat: "RUANG BACAAN 2", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "RBC3": { tempat: "RUANG BACAAN 3", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "SR": { tempat: "STAFF READING", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "MBHS1": { tempat: "MAKMAL BAHASA 1", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "MBHS2": { tempat: "MAKMAL BAHASA 2", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "MBHS3": { tempat: "MAKMAL BAHASA 3", bangunan: "BANGUNAN PUSAT SUMBER" },
+        "MR": { tempat: "BILIK SUMBER MEDIA", bangunan: "BANGUNAN PUSAT SUMBER" },
+        // Subjek Akademik
+        "SM015K": { tempat: "KULIAH MATEMATIK SDS SEM 1", bangunan: "MATEMATIK SAINS" },
+        "SM015T": { tempat: "TUTOR MATEMATIK SDS SEM 1", bangunan: "MATEMATIK SAINS" },
+        "SM025K": { tempat: "KULIAH MATEMATIK SDS SEM 2", bangunan: "MATEMATIK SAINS" },
+        "SM025T": { tempat: "TUTOR MATEMATIK SDS SEM 2", bangunan: "MATEMATIK SAINS" },
+        "SC015K": { tempat: "KULIAH KOMPUTER SDS SEM 1", bangunan: "KOMPUTER" },
+        "SC015PA": { tempat: "AMALI KOMPUTER SDS SEM 1", bangunan: "KOMPUTER" },
+        "SC015T": { tempat: "TUTOR KOMPUTER SDS SEM 1", bangunan: "KOMPUTER" },
+        "SK015K": { tempat: "KULIAH KIMIA SDS SEM 1", bangunan: "KIMIA" },
+        "SK015PA": { tempat: "AMALI KIMIA SDS SEM 1", bangunan: "KIMIA" },
+        "SK015T": { tempat: "TUTOR KIMIA SDS SEM 1", bangunan: "KIMIA" },
+        "SF015K": { tempat: "KULIAH FIZIK SDS SEM 1", bangunan: "FIZIK" },
+        "SF015PA": { tempat: "AMALI FIZIK SDS SEM 1", bangunan: "FIZIK" },
+        "SF015T": { tempat: "TUTOR FIZIK SDS SEM 1", bangunan: "FIZIK" },
+        "SB015K": { tempat: "KULIAH BIOLOGI SDS SEM 1", bangunan: "BIOLOGI" },
+        "SB015PA": { tempat: "AMALI BIOLOGI SDS SEM 1", bangunan: "BIOLOGI" },
+        "SB015T": { tempat: "TUTOR BIOLOGI SDS SEM 1", bangunan: "BIOLOGI" },
+        "AA015K": { tempat: "AKAUN KULIAH SEM 1", bangunan: "PERAKAUNAN" },
+        "AA015PA": { tempat: "AKAUN AMALI SEM 1", bangunan: "PERAKAUNAN" },
+        "AA015T": { tempat: "AKAUN TUTOR SEM 1", bangunan: "PERAKAUNAN" },
+        "HQ111": { tempat: "PAMALI HAFAZAN AL-QURAN SEM 1", bangunan: "HAFAZAN AL-QURAN" },
+        "HQ121": { tempat: "PAMALI HAFAZAN AL-QURAN SEM 2", bangunan: "HAFAZAN AL-QURAN" }
+    };
+
+    // Automasi untuk Bilik Tutor (BT), Bilik Peperiksaan (BP), dan Makmal-makmal
+    const generateBulkData = (prefix, total, tempatName, bangunanName) => {
+        for(let i = 1; i <= total; i++) {
+            database[`${prefix}${i}`] = { tempat: `${tempatName} ${i}`, bangunan: bangunanName };
+        }
+    };
+    
+    // Generate Bilik Tutor Tahap 1, 2, 3
+    for(let j=1; j<=3; j++) {
+        for(let k=1; k<=14; k++) { database[`BT${j}.${k}`] = { tempat: `BILIK TUTOR ${j}.${k}`, bangunan: "BANGUNAN TUTORAN" }; }
+    }
+    // Generate Bilik Peperiksaan
+    for(let j=2; j<=4; j++) {
+        for(let k=1; k<=3; k++) { database[`BP${j}.${k}`] = { tempat: `BILIK PEPERIKSAAN ${j}.${k}`, bangunan: "BANGUNAN PEPERIKSAAN" }; }
+    }
+    
+    generateBulkData("MF", 7, "MAKMAL FIZIK", "BANGUNAN TUTORAN");
+    generateBulkData("MK", 7, "MAKMAL KIMIA", "BANGUNAN TUTORAN");
+    generateBulkData("MB", 5, "MAKMAL BIOLOGI", "BANGUNAN TUTORAN");
+    generateBulkData("MC", 7, "MAKMAL KOMPUTER", "BANGUNAN TUTORAN");
+
+    // Elemen DOM
+    const inputElement = document.getElementById('singkatanInput');
+    const resultsContent = document.getElementById('resultsContent');
+    const emptyContent = document.getElementById('emptyContent');
+    const namaTempatDiv = document.getElementById('namaTempat');
+    const bangunanSubjekDiv = document.getElementById('bangunanSubjek');
+
+    // Event Listener semasa menaip
+    inputElement.addEventListener('input', function() {
+        const query = this.value.trim().toUpperCase();
+
+        if (query === "") {
+            resultsContent.style.display = "none";
+            emptyContent.style.display = "block";
+            emptyContent.innerHTML = "Sila masukkan singkatan di atas untuk memulakan semakan.";
+            return;
+        }
+
+        if (database[query]) {
+            namaTempatDiv.textContent = database[query].tempat;
+            bangunanSubjekDiv.textContent = database[query].bangunan;
+            resultsContent.style.display = "block";
+            emptyContent.style.display = "none";
+        } else {
+            resultsContent.style.display = "none";
+            emptyContent.style.display = "block";
+            emptyContent.innerHTML = `<span style="color: var(--accent-red); font-weight: bold;">"${query}"</span> tidak ditemui dalam pangkalan data.`;
+        }
+    });
+</script>
+
+</body>
+</html>
